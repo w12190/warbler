@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user"
@@ -112,8 +112,13 @@ def login():
 @app.route('/logout')
 def logout():
     """Handle logout of user."""
-
-    # IMPLEMENT THIS
+    
+    if g.user:
+        do_logout()
+        flash("You have successfully logged out.", "success")
+    else:
+        flash("You're not currently logged in.", "danger")
+    return redirect('/')
 
 
 ##############################################################################
@@ -141,7 +146,6 @@ def users_show(user_id):
     """Show user profile."""
 
     user = User.query.get_or_404(user_id)
-
     return render_template('users/show.html', user=user)
 
 
@@ -203,7 +207,25 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
+    update_user_form = UserEditForm() #TODO if necessary, pass all fields except password for convenience (figure out how)
+
+    if update_user_form.validate_on_submit(): #if form okay (it's a POST)
+        if User.authenticate(g.user.username, update_user_form.password.data): #if user authenticated ok
+            g.user.username = update_user_form.username.data
+            g.user.email = update_user_form.email.data
+            g.user.image_url = update_user_form.image_url.data
+            g.user.header_image_url = update_user_form.header_image_url.data
+            g.user.bio = update_user_form.bio.data
+            db.session.commit()
+
+            return redirect(f'/users/{g.user.id}')
+        else:
+            flash("Incorrect password, please try again.", "danger")
+            return render_template('/users/edit.html', form = update_user_form, user = g.user)
+    else: #if form not okay (it's a GET), make them try again
+        return render_template('/users/edit.html', form = update_user_form, user = g.user) #this one actually shows the page
+    
+
 
 
 @app.route('/users/delete', methods=["POST"])
