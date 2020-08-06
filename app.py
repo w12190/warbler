@@ -5,7 +5,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Like
 
 CURR_USER_KEY = "curr_user"
 
@@ -307,15 +307,22 @@ def messages_destroy(message_id):
 # Homepage and error pages
 
 
-@app.route('/', methods = ['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def homepage():
     """Show homepage:
 
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
-    
 
+    if request.method == 'POST':
+        message_id = request.form['message_id']
+        user_id = request.form['user_id']
+
+        like = Like(user_id=user_id, message_id=message_id)
+        db.session.add(like)
+        db.session.commit()
+        return redirect('/')
     
     if g.user:
         follower_ids = [follower.id for follower in g.user.following]
@@ -326,8 +333,6 @@ def homepage():
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
-
-
 
         return render_template('home.html', messages=messages, user_id = g.user.id)
 

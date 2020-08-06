@@ -75,6 +75,7 @@ class User(db.Model):
     )
 
     messages = db.relationship('Message', order_by='Message.timestamp.desc()')
+    likes = db.relationship('Like')
 
     followers = db.relationship(
         "User",
@@ -173,6 +174,20 @@ class Message(db.Model):
     )
 
     user = db.relationship('User')
+    likes = db.relationship('Like')
+    # users = db.relationship('User', secondary='likes', backref='Message')
+
+    def is_liked_by(self, user, message):
+        """Is this message liked?"""
+    # is global user in the list of users that have liked this message
+        return user in message.users
+
+    def is_liked_by2(self, user, message):
+        """Is this message liked?"""
+    # is global user in the list of users that have liked this message
+        ids_liked_message = [like_instance.user_id for like_instance in message.likes]
+        return user.id in ids_liked_message
+
 
 class Like(db.Model):
     """A like between a user and a message."""
@@ -186,14 +201,14 @@ class Like(db.Model):
 
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.id', ondelete = 'CASCADE'),
-        nullable = False,
+        db.ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False,
     )
 
     message_id = db.Column(
         db.Integer,
-        db.ForeignKey('messages.id', ondelete = 'CASCADE'),
-        nullable = False,
+        db.ForeignKey('messages.id', ondelete='CASCADE'),
+        nullable=False,
     )
 
     user = db.relationship('User')
