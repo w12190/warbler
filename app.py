@@ -146,7 +146,13 @@ def users_show(user_id):
     """Show user profile."""
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/show.html', user=user)
+    messages = (Message
+            .query
+            .filter(Message.user_id == user_id)
+            .order_by(Message.timestamp.desc())
+            .limit(100)
+            .all())
+    return render_template('users/show.html', user=user, messages=messages)
 
 
 @app.route('/users/<int:user_id>/following')
@@ -207,32 +213,27 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    update_user_form = UserEditForm() #TODO if necessary, pass all fields except password for convenience (figure out how)
-
-
-    # TODO: How do we input values into our form without password?
-    # update_user_form.username.data = g.user.username
-    # update_user_form.email.data = g.user.email
-    # update_user_form.image_url.data = g.user.image_url
-    # update_user_form.header_image_url.data = g.user.header_image_url
-    # update_user_form.bio.data = g.user.bio
-    # breakpoint()
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect('/')
+    
+    user = g.user
+    update_user_form = UserEditForm(obj=user) #TODO if necessary, pass all fields except password for convenience (figure out how)
 
     if update_user_form.validate_on_submit(): #if form okay (it's a POST)
         if User.authenticate(g.user.username, update_user_form.password.data): #if user authenticated ok
-            g.user.username = update_user_form.username.data
-            g.user.email = update_user_form.email.data
-            g.user.image_url = update_user_form.image_url.data
-            g.user.header_image_url = update_user_form.header_image_url.data
-            g.user.bio = update_user_form.bio.data
+            user.username = update_user_form.username.data
+            user.email = update_user_form.email.data
+            user.image_url = update_user_form.image_url.data or "/static/images/default-pic.png"
+            user.header_image_url = update_user_form.header_image_url.data or "/static/images/warbler-hero.jpg"
+            user.bio = update_user_form.bio.data
+            
             db.session.commit()
-
             return redirect(f'/users/{g.user.id}')
         else:
             flash("Incorrect password, please try again.", "danger")
-            return render_template('/users/edit.html', form = update_user_form, user = g.user)
-    else: #if form not okay (it's a GET), make them try again
-        return render_template('/users/edit.html', form = update_user_form, user = g.user) #this one actually shows the page
+    
+    return render_template('/users/edit.html', form=update_user_form, user_id=user.id) #this one actually shows the page
     
 
 
@@ -320,7 +321,7 @@ def homepage():
         
         messages = (Message
                     .query
-                    .filter(Message.user_id.in_(follower_ids))
+                    .filter(Message.user_id.in_(follower_ids) | (Message.user_id == g.user.id))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
