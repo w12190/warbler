@@ -20,7 +20,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
-toolbar = DebugToolbarExtension(app)
+# toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
 
@@ -141,9 +141,27 @@ def list_users():
     return render_template('users/index.html', users=users)
 
 
-@app.route('/users/<int:user_id>')
+@app.route('/users/<int:user_id>', methods = ['GET', 'POST'])
 def users_show(user_id):
     """Show user profile."""
+
+    if request.method == 'POST': #clicked a star
+        message_id = request.form['message_id']
+        user_id_2 = request.form['check']
+
+        current_message = Message.query.get(message_id)
+
+        if current_message.is_liked_by(g.user, current_message): #if liked already
+            like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g.user.id)).all()[0]
+            db.session.delete(like)
+            db.session.commit()
+            return redirect(f"/users/{user_id2}")
+
+        like = Like(user_id=user_id, message_id=message_id) #else if not liked already
+        db.session.add(like)
+        db.session.commit()
+        return redirect(f"/users/{user_id2}")
+
 
     user = User.query.get_or_404(user_id)
     messages = (Message
@@ -318,6 +336,15 @@ def homepage():
     if request.method == 'POST':
         message_id = request.form['message_id']
         user_id = request.form['check']
+
+        current_message = Message.query.get(message_id)
+
+        if current_message.is_liked_by(g.user, current_message): #if liked already
+            like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g.user.id)).all()[0]
+            # breakpoint()
+            db.session.delete(like)
+            db.session.commit()
+            return redirect('/')
 
         like = Like(user_id=user_id, message_id=message_id)
         db.session.add(like)

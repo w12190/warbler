@@ -177,11 +177,13 @@ class Message(db.Model):
     likes = db.relationship('Like')
     # users = db.relationship('User', secondary='likes', backref='Message')
 
+
     def is_liked_by(self, user, message):
         """Is this message liked?"""
     # is global user in the list of users that have liked this message
         ids_liked_message = [like_instance.user_id for like_instance in message.likes]
         return user.id in ids_liked_message
+        
 
 
 class Like(db.Model):
