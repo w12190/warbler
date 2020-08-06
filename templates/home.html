@@ -61,9 +61,9 @@
                   {{ msg.timestamp.strftime('%d %B %Y') }}</span>
 
                   {% if msg.user_id !=  user_id %}
-                    <form method="POST">
+                    <form action='/' method="POST">
                       <input type="hidden" value="{{ msg.id }}" name='message_id'>
-                      <input type="hidden" value="{{ msg.user_id }}" name='user_id'>
+                      <input type="hidden" value="{{ g.user.id }}" name='check'>
                       {% if msg.is_liked_by(g.user, msg) %}
                         <a><button type="submit" class="fas fa-star"></button></a>
                       {% else %}

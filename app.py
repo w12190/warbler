@@ -317,12 +317,14 @@ def homepage():
 
     if request.method == 'POST':
         message_id = request.form['message_id']
-        user_id = request.form['user_id']
+        user_id = request.form['check']
 
         like = Like(user_id=user_id, message_id=message_id)
         db.session.add(like)
         db.session.commit()
+        # breakpoint()
         return redirect('/')
+
     
     if g.user:
         follower_ids = [follower.id for follower in g.user.following]
@@ -333,7 +335,6 @@ def homepage():
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
-        breakpoint()
         return render_template('home.html', messages=messages, user_id = g.user.id)
     else:
         return render_template('home-anon.html')
