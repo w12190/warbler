@@ -2,8 +2,9 @@
 
 {% block content %}
 
-
-  <img src="{{ user.header_image_url }}" alt="Header image for {{ user.username }}" id="warbler-hero" class="full-width">
+  <div class="full-width">
+    <img src="{{ user.header_image_url }}" alt="Header image for {{ user.username }}" id="warbler-hero" class="full-width">
+  </div>
 
   <img src="{{ user.image_url }}" alt="Image for {{ user.username }}" id="profile-avatar">
   <div class="row full-width">

@@ -209,6 +209,15 @@ def profile():
 
     update_user_form = UserEditForm() #TODO if necessary, pass all fields except password for convenience (figure out how)
 
+
+    # TODO: How do we input values into our form without password?
+    # update_user_form.username.data = g.user.username
+    # update_user_form.email.data = g.user.email
+    # update_user_form.image_url.data = g.user.image_url
+    # update_user_form.header_image_url.data = g.user.header_image_url
+    # update_user_form.bio.data = g.user.bio
+    # breakpoint()
+
     if update_user_form.validate_on_submit(): #if form okay (it's a POST)
         if User.authenticate(g.user.username, update_user_form.password.data): #if user authenticated ok
             g.user.username = update_user_form.username.data
@@ -304,15 +313,26 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
-
+    
     if g.user:
+        follower_ids = []
+        follower_ids = [follower.id for follower in g.user.following]
+        
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(follower_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
 
+        # alternative approach instead of filtering:
+        # following = g.user.following
+        # total_messages = g.user.messages
+        # for user in following:
+        #     total_messages = set(total_messages)|set(user.messages)
+
         return render_template('home.html', messages=messages)
+        # return render_template('home.html', messages=list(total_messages)[0:101])
 
     else:
         return render_template('home-anon.html')

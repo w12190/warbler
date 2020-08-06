@@ -61,10 +61,12 @@ class User(db.Model):
 
     bio = db.Column(
         db.Text,
+        default=''
     )
 
     location = db.Column(
         db.Text,
+        default=''
     )
 
     password = db.Column(
