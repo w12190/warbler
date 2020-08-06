@@ -147,20 +147,20 @@ def users_show(user_id):
 
     if request.method == 'POST': #clicked a star
         message_id = request.form['message_id']
-        user_id_2 = request.form['check']
+        g_user_id = request.form['check'] #can remove this and just reference the global id
 
         current_message = Message.query.get(message_id)
 
         if current_message.is_liked_by(g.user, current_message): #if liked already
-            like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g.user.id)).all()[0]
+            like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g_user_id)).all()[0]
             db.session.delete(like)
             db.session.commit()
-            return redirect(f"/users/{user_id2}")
+            return redirect(f"/users/{user_id}")
 
-        like = Like(user_id=user_id, message_id=message_id) #else if not liked already
+        like = Like(user_id=g_user_id, message_id=message_id) #else if not liked already
         db.session.add(like)
         db.session.commit()
-        return redirect(f"/users/{user_id2}")
+        return redirect(f"/users/{user_id}")
 
 
     user = User.query.get_or_404(user_id)
