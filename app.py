@@ -307,7 +307,7 @@ def messages_destroy(message_id):
 # Homepage and error pages
 
 
-@app.route('/')
+@app.route('/', methods = ['GET', 'POST'])
 def homepage():
     """Show homepage:
 
@@ -315,8 +315,9 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
     
+
+    
     if g.user:
-        follower_ids = []
         follower_ids = [follower.id for follower in g.user.following]
         
         messages = (Message
@@ -326,14 +327,9 @@ def homepage():
                     .limit(100)
                     .all())
 
-        # alternative approach instead of filtering:
-        # following = g.user.following
-        # total_messages = g.user.messages
-        # for user in following:
-        #     total_messages = set(total_messages)|set(user.messages)
 
-        return render_template('home.html', messages=messages)
-        # return render_template('home.html', messages=list(total_messages)[0:101])
+
+        return render_template('home.html', messages=messages, user_id = g.user.id)
 
     else:
         return render_template('home-anon.html')
