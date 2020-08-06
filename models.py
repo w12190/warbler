@@ -180,11 +180,6 @@ class Message(db.Model):
     def is_liked_by(self, user, message):
         """Is this message liked?"""
     # is global user in the list of users that have liked this message
-        return user in message.users
-
-    def is_liked_by2(self, user, message):
-        """Is this message liked?"""
-    # is global user in the list of users that have liked this message
         ids_liked_message = [like_instance.user_id for like_instance in message.likes]
         return user.id in ids_liked_message
 

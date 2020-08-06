@@ -64,7 +64,7 @@
                     <form method="POST">
                       <input type="hidden" value="{{ msg.id }}" name='message_id'>
                       <input type="hidden" value="{{ msg.user_id }}" name='user_id'>
-                      {% if msg.is_liked_by2(g.user, msg) %}
+                      {% if msg.is_liked_by(g.user, msg) %}
                         <a><button type="submit" class="fas fa-star"></button></a>
                       {% else %}
                         <a><button type="submit" class="far fa-star"></button></a>
