@@ -16,16 +16,16 @@
             <a href="/users/{{ user.id }}">@{{ user.username }}</a>
             <span class="text-muted">
               {{ message.timestamp.strftime('%d %B %Y') }}
-              {% if message.user_id !=  user_id %}
-                <form action='/users/{{ user.id }}' method="POST">
-                  <input type="hidden" value="{{ message.id }}" name='message_id'>
-                  <input type="hidden" value="{{ g.user.id }}" name='check'>
-                  {% if message.is_liked_by(g.user, message) %}
+              {% if message.user_id !=  g.user.id %}
+
+                <form action='/messages/{{ message.id }}/like' method="POST">
+                  {% if message in g.user.liked_messages %}
                     <a><button type="submit" class="fas fa-star"></button></a>
                   {% else %}
                     <a><button type="submit" class="far fa-star"></button></a>
                   {% endif %}
                 </form>
+
               {% endif %}
             </span>
             <p>{{ message.text }}</p>

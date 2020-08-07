@@ -61,15 +61,15 @@
                   {{ msg.timestamp.strftime('%d %B %Y') }}</span>
 
                   {% if msg.user_id !=  user_id %}
-                    <form action='/' method="POST">
-                      <input type="hidden" value="{{ msg.id }}" name='message_id'>
-                      <input type="hidden" value="{{ g.user.id }}" name='check'>
-                      {% if msg.is_liked_by(g.user, msg) %}
+
+                    <form action='/messages/{{ msg.id }}/like' method="POST">
+                      {% if msg in g.user.liked_messages %}
                         <a><button type="submit" class="fas fa-star"></button></a>
                       {% else %}
                         <a><button type="submit" class="far fa-star"></button></a>
                       {% endif %}
                     </form>
+
                   {% endif %}
 
 

@@ -141,29 +141,29 @@ def list_users():
     return render_template('users/index.html', users=users)
 
 
-@app.route('/users/<int:user_id>', methods = ['GET', 'POST'])
+@app.route('/users/<int:user_id>', methods = ['GET'])
 def users_show(user_id):
     """Show user profile."""
 
-    #if POST request, toggle like status in DB using form data.
-    if request.method == 'POST': #clicked a star
-        message_id = request.form['message_id']
-        g_user_id = request.form['check'] #can remove this and just reference the global id
+    # #if POST request, toggle like status in DB using form data.
+    # if request.method == 'POST': #clicked a star
+    #     message_id = request.form['message_id']
+    #     g_user_id = request.form['check'] #can remove this and just reference the global id
 
-        current_message = Message.query.get(message_id)
+    #     current_message = Message.query.get(message_id)
 
-        #if message is liked, remove like
-        if current_message.is_liked_by(g.user, current_message): #if liked already
-            like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g_user_id)).all()[0]
-            db.session.delete(like)
-            db.session.commit()
-            return redirect(f"/users/{user_id}")
+    #     #if message is liked, remove like
+    #     if current_message.is_liked_by(g.user, current_message): #if liked already
+    #         like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g_user_id)).all()[0]
+    #         db.session.delete(like)
+    #         db.session.commit()
+    #         return redirect(f"/users/{user_id}")
 
-        #else if message is not liked, add like
-        like = Like(user_id=g_user_id, message_id=message_id) #else if not liked already
-        db.session.add(like)
-        db.session.commit()
-        return redirect(f"/users/{user_id}")
+    #     #else if message is not liked, add like
+    #     like = Like(user_id=g_user_id, message_id=message_id) #else if not liked already
+    #     db.session.add(like)
+    #     db.session.commit()
+    #     return redirect(f"/users/{user_id}")
 
     #if GET request, display messages
     user = User.query.get_or_404(user_id)
@@ -173,7 +173,7 @@ def users_show(user_id):
             .order_by(Message.timestamp.desc())
             .limit(100)
             .all())
-    return render_template('users/show.html', user=user, messages=messages, num_likes = len(user.likes))
+    return render_template('users/show.html', user=user, messages=messages)
 
 
 @app.route('/users/<int:user_id>/following')
@@ -276,13 +276,16 @@ def delete_user():
 @app.route('/users/<int:user_id>/likes')
 def show_likes(user_id):
     """ Display all messages liked by a user. """
-    user = User.query.get(user_id)
+    user = User.query.get_or_404(user_id)
     #TODO: use ORM solutions instead of 'writing sql queries'
     #TODO: use count instead of len, it's faster
     #TODO: use ORM!!!!!!
-    messages = [Message.query.get(like.message_id) for like in User.query.get(user_id).likes]
+    # messages = [Message.query.get(like.message_id) for like in User.query.get(user_id).likes]
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
-    return render_template('users/likes.html', user=user, messages=messages, num_likes = len(user.likes))
+    return render_template('users/likes.html', user=user)
 
 
 ##############################################################################
@@ -337,7 +340,7 @@ def messages_destroy(message_id):
 # Homepage and error pages
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def homepage():
     """Show homepage:
 
@@ -348,23 +351,23 @@ def homepage():
 #TODO: when NOT logged in, handle case
 # 1. other solution, use get and url parameters
 
-    #if POST, check form and update like
-    if request.method == 'POST':
-        message_id = request.form['message_id']
-        user_id = request.form['check']
+    # #if POST, check form and update like
+    # if request.method == 'POST':
+    #     message_id = request.form['message_id']
+    #     user_id = request.form['check']
 
-        current_message = Message.query.get(message_id)
+    #     current_message = Message.query.get(message_id)
 
-        if current_message.is_liked_by(g.user, current_message): #if liked already
-            like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g.user.id)).first()
-            db.session.delete(like)
-            db.session.commit()
-            return redirect('/')
+    #     if current_message.is_liked_by(g.user, current_message): #if liked already
+    #         like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g.user.id)).first()
+    #         db.session.delete(like)
+    #         db.session.commit()
+    #         return redirect('/')
 
-        like = Like(user_id=user_id, message_id=message_id)
-        db.session.add(like)
-        db.session.commit()
-        return redirect('/')
+    #     like = Like(user_id=user_id, message_id=message_id)
+    #     db.session.add(like)
+    #     db.session.commit()
+    #     return redirect('/')
 
     #if GET, check if logged in then get user's & followed's msgs and show on homepage
     if g.user:
@@ -380,6 +383,25 @@ def homepage():
     else:
         return render_template('home-anon.html')
 
+@app.route('/messages/<int:message_id>/like', methods=['POST'])
+def add_like(message_id):
+    """toggle liking a message for a logged in user
+    """
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    liked_message = Message.query.get_or_404(message_id)
+    
+    if liked_message in g.user.liked_messages:
+        g.user.liked_messages.remove(liked_message)
+    else:
+        g.user.liked_messages.append(liked_message)
+
+    db.session.commit()
+        
+    return redirect('/')
 
 ##############################################################################
 # Turn off all caching in Flask

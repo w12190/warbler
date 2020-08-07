@@ -73,10 +73,9 @@ class User(db.Model):
         db.Text,
         nullable=False,
     )
-
-    #TODO: 
+ 
     messages = db.relationship('Message', order_by='Message.timestamp.desc()')
-    likes = db.relationship('Like')
+    # likes = db.relationship('Like')
 
     followers = db.relationship(
         "User",
@@ -91,6 +90,8 @@ class User(db.Model):
         primaryjoin=(Follows.user_following_id == id),
         secondaryjoin=(Follows.user_being_followed_id == id)
     )
+
+    liked_messages = db.relationship('Message', secondary="likes")
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
@@ -175,16 +176,19 @@ class Message(db.Model):
     )
 
     user = db.relationship('User')
-    likes = db.relationship('Like')
-    users = db.relationship('User', secondary='likes')
+    # likes = db.relationship('Like')
+    # users = db.relationship('User', secondary='likes')
     # tags = db.relationship('Tag', secondary = 'posts_tags', backref='posts')
 
-    #TODO: return a set instead
-    def is_liked_by(self, user, message):
-        """Is this message liked?"""
-    # is global user in the list of users that have liked this message
-        ids_liked_message = [like_instance.user_id for like_instance in message.likes]
-        return user.id in ids_liked_message
+
+
+
+    # #TODO: return a set instead
+    # def is_liked_by(self, user, message):
+    #     """Is this message liked?"""
+    # # is global user in the list of users that have liked this message
+    #     ids_liked_message = [like_instance.user_id for like_instance in message.likes]
+    #     return user.id in ids_liked_message
         
 
 
@@ -212,8 +216,8 @@ class Like(db.Model):
 
     #TODO: many to many, notes.liked messages
     #NOTE: don't make relationships you don't use
-    user = db.relationship('User')
-    message = db.relationship('Message')
+    # user = db.relationship('User')
+    # message = db.relationship('Message')
 
 
 def connect_db(app):
