@@ -170,7 +170,7 @@ def users_show(user_id):
             .order_by(Message.timestamp.desc())
             .limit(100)
             .all())
-    return render_template('users/show.html', user=user, messages=messages)
+    return render_template('users/show.html', user=user, messages=messages, num_likes = len(user.likes))
 
 
 @app.route('/users/<int:user_id>/following')
@@ -254,8 +254,6 @@ def profile():
     return render_template('/users/edit.html', form=update_user_form, user_id=user.id) #this one actually shows the page
     
 
-
-
 @app.route('/users/delete', methods=["POST"])
 def delete_user():
     """Delete user."""
@@ -270,6 +268,18 @@ def delete_user():
     db.session.commit()
 
     return redirect("/signup")
+
+
+@app.route('/users/<int:user_id>/likes')
+def show_likes(user_id):
+    """ Display all messages liked by a user. """
+    user = User.query.get(user_id)
+    #TODO: use ORM solutions instead of 'writing sql queries'
+    #TODO: use count instead of len, it's faster
+    #TODO: use ORM!!!!!!
+    messages = [Message.query.get(like.message_id) for like in User.query.get(user_id).likes]
+
+    return render_template('users/likes.html', user=user, messages=messages, num_likes = len(user.likes))
 
 
 ##############################################################################
@@ -320,7 +330,6 @@ def messages_destroy(message_id):
 
     return redirect(f"/users/{g.user.id}")
 
-
 ##############################################################################
 # Homepage and error pages
 
@@ -333,6 +342,9 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
 
+#TODO: when NOT logged in, handle case
+# 1. other solution, use get and url parameters
+
     if request.method == 'POST':
         message_id = request.form['message_id']
         user_id = request.form['check']
@@ -340,8 +352,7 @@ def homepage():
         current_message = Message.query.get(message_id)
 
         if current_message.is_liked_by(g.user, current_message): #if liked already
-            like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g.user.id)).all()[0]
-            # breakpoint()
+            like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g.user.id)).first()
             db.session.delete(like)
             db.session.commit()
             return redirect('/')
@@ -349,7 +360,6 @@ def homepage():
         like = Like(user_id=user_id, message_id=message_id)
         db.session.add(like)
         db.session.commit()
-        # breakpoint()
         return redirect('/')
 
     

@@ -74,6 +74,7 @@ class User(db.Model):
         nullable=False,
     )
 
+    #TODO: 
     messages = db.relationship('Message', order_by='Message.timestamp.desc()')
     likes = db.relationship('Like')
 
@@ -177,7 +178,7 @@ class Message(db.Model):
     likes = db.relationship('Like')
     # users = db.relationship('User', secondary='likes', backref='Message')
 
-
+    #TODO: return a set instead
     def is_liked_by(self, user, message):
         """Is this message liked?"""
     # is global user in the list of users that have liked this message
@@ -208,6 +209,8 @@ class Like(db.Model):
         nullable=False,
     )
 
+    #TODO: many to many, notes.liked messages
+    #NOTE: don't make relationships you don't use
     user = db.relationship('User')
     message = db.relationship('Message')
 
