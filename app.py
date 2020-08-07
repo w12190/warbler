@@ -145,24 +145,27 @@ def list_users():
 def users_show(user_id):
     """Show user profile."""
 
+    #if POST request, toggle like status in DB using form data.
     if request.method == 'POST': #clicked a star
         message_id = request.form['message_id']
         g_user_id = request.form['check'] #can remove this and just reference the global id
 
         current_message = Message.query.get(message_id)
 
+        #if message is liked, remove like
         if current_message.is_liked_by(g.user, current_message): #if liked already
             like = Like.query.filter((Like.message_id == message_id) & (Like.user_id == g_user_id)).all()[0]
             db.session.delete(like)
             db.session.commit()
             return redirect(f"/users/{user_id}")
 
+        #else if message is not liked, add like
         like = Like(user_id=g_user_id, message_id=message_id) #else if not liked already
         db.session.add(like)
         db.session.commit()
         return redirect(f"/users/{user_id}")
 
-
+    #if GET request, display messages
     user = User.query.get_or_404(user_id)
     messages = (Message
             .query
@@ -236,7 +239,7 @@ def profile():
         return redirect('/')
     
     user = g.user
-    update_user_form = UserEditForm(obj=user) #TODO if necessary, pass all fields except password for convenience (figure out how)
+    update_user_form = UserEditForm(obj=user)
 
     if update_user_form.validate_on_submit(): #if form okay (it's a POST)
         if User.authenticate(g.user.username, update_user_form.password.data): #if user authenticated ok
@@ -345,6 +348,7 @@ def homepage():
 #TODO: when NOT logged in, handle case
 # 1. other solution, use get and url parameters
 
+    #if POST, check form and update like
     if request.method == 'POST':
         message_id = request.form['message_id']
         user_id = request.form['check']
@@ -362,7 +366,7 @@ def homepage():
         db.session.commit()
         return redirect('/')
 
-    
+    #if GET, check if logged in then get user's & followed's msgs and show on homepage
     if g.user:
         follower_ids = [follower.id for follower in g.user.following]
         

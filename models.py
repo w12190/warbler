@@ -176,7 +176,8 @@ class Message(db.Model):
 
     user = db.relationship('User')
     likes = db.relationship('Like')
-    # users = db.relationship('User', secondary='likes', backref='Message')
+    users = db.relationship('User', secondary='likes')
+    # tags = db.relationship('Tag', secondary = 'posts_tags', backref='posts')
 
     #TODO: return a set instead
     def is_liked_by(self, user, message):
