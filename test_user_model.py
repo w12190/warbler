@@ -10,6 +10,9 @@ from unittest import TestCase
 
 from models import db, User, Message, Follows
 from sqlalchemy.exc import IntegrityError
+from flask_bcrypt import Bcrypt
+
+bcrypt = Bcrypt()
 
 
 # BEFORE we import our app, let's set an environmental variable
@@ -45,7 +48,7 @@ class UserModelTestCase(TestCase):
         user1 = User(
             email="test@test.com",
             username="testuser",
-            password="HASHED_PASSWORD",
+            password=bcrypt.generate_password_hash("HASHED_PASSWORD").decode('UTF-8'),
         )
         user2 = User(
             email="test2@test.com",
@@ -118,8 +121,25 @@ class UserModelTestCase(TestCase):
 
     def test_user_authenticate(self):
         """ Does User.authenticate() work? """
-        # username = 'testuser'
-        # password = 'HASHED_PASSWORD'
-        # user = User.query.filter_by(username=username).first()
+        username = 'testuser'
+        password = 'HASHED_PASSWORD'
+        user = User.query.get(self.user1.id)
+        # print('@)(&$^)&*(%)(^&#)(*^$)(^%', user, username, user.password, password)
+        # breakpoint()
+        self.assertEqual(User.authenticate(username=username,
+                                            password=password), user)
 
-        # self.assertEqual(User.authenticate(username = 'testuser', password = password), user)
+    def test_user_authenticate_false_username(self):
+        """ Does User.authenticate() fail with wrong username """
+        username = 'wrongusername'
+        password = 'HASHED_PASSWORD'
+        self.assertFalse(User.authenticate(username=username,
+                                            password=password))
+
+    def test_user_authenticate_false_password(self):
+        """ Does User.authenticate() fail with wrong password? """
+        username = 'testuser'
+        password = 'WRONG_PASSWORD'
+        self.assertFalse(User.authenticate(username=username,
+                                            password=password))
+    

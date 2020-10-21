@@ -5,6 +5,9 @@ from datetime import datetime
 from unittest import TestCase
 
 from models import db, User, Message, Follows
+from flask_bcrypt import Bcrypt
+
+bcrypt = Bcrypt()
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -36,35 +39,36 @@ class MessageModelTestCase(TestCase):
 
         self.client = app.test_client()
 
-    def test_message_model(self):
-        """Does basic message odel work?"""
-
-        test_time = datetime.utcnow() #might need to relocate if different from line 55
-
         user = User(
             email="test@test.com",
             username="testuser",
-            password="HASHED_PASSWORD"
+            password=bcrypt.generate_password_hash("HASHED_PASSWORD").decode('UTF-8'),
         )
+
+        self.user = user
 
         db.session.add(user)
         db.session.commit()
 
-
         message = Message(
             text = "test message",
-            timestamp = test_time,
+            # timestamp = test_time,
             user_id = user.id
         )
 
+        self.message = message
+
         db.session.add(message)
         db.session.commit()
+    
+    
+    def test_message_model(self):
+        """Does basic message model work?"""
 
         # Message should have all attributes
-        self.assertEqual(type(message.id), int)
-        self.assertEqual(message.text, 'test message')
-        self.assertEqual(message.timestamp, test_time)
-        self.assertEqual(message.user_id, user.id)
+        self.assertEqual(type(self.message.id), int)
+        self.assertEqual(self.message.text, 'test message')
+        self.assertEqual(self.message.user_id, self.user.id)
 
     # def test_relationship(self):
     #     """ Does the relationship 

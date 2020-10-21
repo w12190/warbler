@@ -164,6 +164,10 @@ def users_show(user_id):
     #     db.session.commit()
     #     return redirect(f"/users/{user_id}")
 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
     #if GET request, display messages
     user = User.query.get_or_404(user_id)
     messages = (Message
